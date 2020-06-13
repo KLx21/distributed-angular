@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2015 TIBCO Software Inc.
+  ~ All Rights Reserved.
+  -->
+<html>
+<head>
+  <title></title>
+  <base href="/">
+  <meta charset="UTF-8">
+  <link rel="icon" href="assets/img/favicon.ico" type="image/x-ico">
+  <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+  <!-- prerequisite:css -->
+  <!-- endinject -->
+  <!-- extra-deps:css -->
+  <!-- endinject -->
+  <!-- inject:css -->
+  <!-- endinject -->
+</head>
+<body class="tropos-root">
+<!-- script>
+    var dataLayer = [{
+        'environment':'dev', //or prod
+        'userID':'1234', //unique user ID of logged in user (non PII)
+        'signupDate':'20150924', //date user signed up
+        'numberOfApps':'0' //a metric to gauge the user
+}];
+</script -->
+<!-- Google Tag Manager -->
+<noscript>
+  <iframe src="//www.googletagmanager.com/ns.html?id=GTM-NL7C6V" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
+
+ <!-- Pendo Script goes here -->
+ <script type="text/javascript">
+  (function(p,e,n,d,o){var v,w,x,y,z;o=p[d]=p[d]||{};o._q=[];
+      v=['initialize','identify','updateOptions','pageLoad'];for(w=0,x=v.length;w<x;++w)(function(m){
+          o[m]=o[m]||function(){o._q[m===v[0]?'unshift':'push']([m].concat([].slice.call(arguments,0)));};})(v[w]);
+      y=e.createElement(n);y.async=!0;y.src='https://cdn.pendo.io/agent/static/30b53883-4f50-46a5-45d9-2f87691fd3f1/pendo.js';
+      z=e.getElementsByTagName(n)[0];z.parentNode.insertBefore(y,z);})(window,document,'script','pendo');
+</script>
+<!-- Pendo script ends here -->
+
+<script>
+  if (self === top) {
+    var theBody = document.getElementsByTagName('body')[0];
+    theBody.style.display = 'block';
+  } else {
+    top.location = self.location;
+  }
+  (function (w, d, s, l, i) {
+    w[l] = w[l] || [];
+    w[l].push({
+      'gtm.start': new Date().getTime(),
+      event: 'gtm.js'
+    });
+    var f = d.getElementsByTagName(s)[0],
+      j = d.createElement(s),
+      dl = l !== 'dataLayer' ? '&l=' + l : '';
+    j.async = true;
+    j.src = '//www.googletagmanager.com/gtm.js?id=' + i + dl;
+    f.parentNode.insertBefore(j, f);
+  })(window, document, 'script', 'dataLayer', 'GTM-NL7C6V');
+
+</script>
+<!-- End Google Tag Manager -->
+<div class="root-component">
+  <tci-root style="margin-top: 84px; display: block; overflow: auto;"></tci-root>
+<!--  <div ng-view></div>-->
+</div>
+<!-- prerequisite:js -->
+<!-- endinject -->
+<!-- extra-deps:js -->
+<!-- endinject -->
+<!-- ng2:js -->
+<!-- endinject -->
+<!-- entry-point:js -->
+</body>
+</html>
