@@ -246,7 +246,7 @@ const stage = gPlugins.environments.make("staging");
      */
     function handleError(level, error) {
         if (error.message) {
-            log(chalk.default.magenta(error.message));
+            log(chalk.magenta(error.message));
         }
 
         const neverExit = process.env.ENV && process.env.ENV.toLowerCase() === "dev";
