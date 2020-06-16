@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterContentInit, AfterViewInit, Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'tci-root',
@@ -7,7 +7,7 @@ import { AfterViewInit, Component, OnInit } from '@angular/core';
     './ng-app.component.less'
   ]
 })
-export class NgAppComponent implements OnInit, AfterViewInit {
+export class NgAppComponent implements OnInit, AfterContentInit {
 
   renderTime: string;
 
@@ -15,7 +15,7 @@ export class NgAppComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {}
 
-  ngAfterViewInit() {
+  ngAfterContentInit() {
     this.renderTime = new Date().toLocaleString();
   }
 }
