@@ -2,9 +2,8 @@ const del = require('del');
 const gulp = require('gulp');
 const gLoadPlugins = require('gulp-load-plugins');
 const lodash = require('lodash');
-const log = require('fancy-log');
 const {rollup} = require('rollup');
-const rollupCommonJS = require('@rollup/plugin-commonjs');
+const rollupCommonJs = require('@rollup/plugin-commonjs');
 const rollupNodeResolve = require('@rollup/plugin-node-resolve').default;
 const rollupSourcemaps = require('rollup-plugin-sourcemaps');
 const rollupTerser = require('rollup-plugin-terser');
@@ -15,6 +14,7 @@ const clientConfig = require('./client.config');
 const utils = require('./gulp-utils');
 const pkg = require('./package.json');
 
+const moduleNames = clientConfig.moduleNames;
 const singleFolderNames = clientConfig.singleFolderNames;
 const folders = clientConfig.folders;
 const fileNames = clientConfig.fileNames;
@@ -28,9 +28,8 @@ const tsProject = gPlugins.typescript.createProject(`${ folders.client }/tsconfi
 const cleanUpAll = gulp.parallel(
   cleanTmpCoreBundle,
   cleanTmpTranspiledClient,
-  // cleanTmpGlobalRxjs,
   cleanTmpNgDependencies,
-  cleanServerFiles
+  cleanServer
 );
 
 const transpileClient = gulp.series(
@@ -40,72 +39,73 @@ const transpileClient = gulp.series(
 );
 
 const bundleApp = gulp.series(
-  gulp.parallel(
-    cleanTmpCoreBundle,
-    cleanTmpDepsBundle
-  ),
+  cleanTmpCoreBundle,
   transpileClient,
-  doBundleApp
-  // removeSourceFiles
+  doBundleApp,
+  removeSourceFiles
 );
 
-const bundleGlobalRxjs = gulp.series(
-  // cleanTmpGlobalRxjs,
-  doBundleGlobalRxjs
+const bundleRxjsOperators = gulp.series(
+  cleanTmpRxjsOperatorsBundle,
+  doBundleRxjsOperators
+);
+
+const copyDependencies = gulp.series(
+  cleanTmpVendor,
+  copyVendors
 );
 
 const prepareNgFiles = gulp.series(
-  bundleApp
-  // bundleGlobalRxjs
+  bundleApp,
+  bundleRxjsOperators,
+  copyDependencies,
+  copyPrerequisites
 );
 
 const injectIndexHtml = gulp.series(
-  copyPrerequisites,
   prepareNgFiles,
   doStaticResourceInjection
 );
 
-const prepareUiFiles = gulp.series(
+const distUi = gulp.series(
   injectIndexHtml,
-  distUiFiles
+  doDistUiFiles
 );
 
-const prepareServerFiles = gulp.series(
-  cleanServerFiles,
+const npmInstall = gulp.series(
+  copyPackageJson,
+  doNpmInstall
+);
+
+const distServer = gulp.series(
+  cleanServer,
   gulp.parallel(
-    gulp.series(
-      copyPackageJson,
-      doNpmInstall
-    ),
-    distServerFiles
+    npmInstall,
+    doDistServerFiles
   )
 );
 
+/* Exported tasks */
 lodash.assign(exports, {
   bundleApp,
-  // bundleGlobalRxjs,
+  bundleRxjsOperators,
   cleanUpAll,
+  copyDependencies,
   dist: gulp.parallel(
-    prepareUiFiles,
-    prepareServerFiles
+    distUi,
+    distServer
   ),
+  distServer,
+  distUi,
   injectIndexHtml,
-  npmInstall: gulp.series(
-    copyPackageJson,
-    doNpmInstall
-  ),
+  npmInstall,
   prepareNgFiles,
-  prepareServerFiles,
-  prepareUiFiles,
-  transpileCoreClient: transpileClient
+  transpileClient
 });
 
-/*************************/
-/* Function declarations */
+/************** Function declarations start from here on **************/
 
-/*************************/
-
-function cleanServerFiles() {
+function cleanServer() {
   return del(folders.distServer);
 }
 
@@ -120,7 +120,7 @@ function cleanTmpCoreBundle() {
     fileNames.minCoreJSFile,
     fileNames.minCoreJSFile + '.map'
   ], {
-    cwd: folders.tmp
+    cwd: folders.tmpBundles
   });
 }
 
@@ -131,22 +131,7 @@ function cleanTmpDepsBundle() {
     fileNames.minDepsJSFile,
     fileNames.minDepsJSFile + '.map'
   ], {
-    cwd: folders.tmp
-  });
-}
-
-/**
- * Remove the RxJS bundle files including the "ng2-rxjs.bundle.js" file and the "ng2-rxjs.bundle.min.js" file, as well
- * as the corresponding source map files from the "tmp" folder.
- */
-function cleanTmpGlobalRxjs() {
-  return del([
-    fileNames.globalRxJsFile,
-    fileNames.globalRxJsFile + '.map',
-    fileNames.minGlobalRxJsFile,
-    fileNames.minGlobalRxJsFile + '.map'
-  ], {
-    cwd: folders.tmp
+    cwd: folders.tmpBundles
   });
 }
 
@@ -162,9 +147,20 @@ function cleanTmpNgDependencies() {
       fileNames.minDepsJSFile,
       fileNames.minDepsJSFile + '.map'
     ],
-    ...filePaths.ng2DepsToCopy
+    ...filePaths.ngDepsToCopy
   ], {
     cwd: folders.tmp
+  });
+}
+
+function cleanTmpRxjsOperatorsBundle() {
+  return del([
+    fileNames.rxjsOperatorsJsFile,
+    fileNames.rxjsOperatorsJsFile + '.map',
+    fileNames.minRxjsOperatorsJsFile,
+    fileNames.minRxjsOperatorsJsFile + '.map'
+  ], {
+    cwd: folders.tmpBundles
   });
 }
 
@@ -174,6 +170,47 @@ function cleanTmpNgDependencies() {
 */
 function cleanTmpTranspiledClient() {
   return del(folders.tmpTranspiled);
+}
+
+function cleanTmpVendor() {
+  return del(folders.tmpVendor);
+}
+
+function constructImportmaps() {
+  const aScriptTagForImportmaps = [
+    '<script type="systemjs-importmap">',
+    '</script>'
+  ];
+  const oImportmaps = {
+    imports: {
+      [moduleNames.core]: `${ singleFolderNames.bundles }/${ utils.inProduction() ? fileNames.minCoreJSFile : fileNames.coreJSFile }`,
+      '@angular/core': `${ singleFolderNames.vendor }/@angular/core/bundles/core.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/common': `${ singleFolderNames.vendor }/@angular/common/bundles/common.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/common/http': `${ singleFolderNames.vendor }/@angular/common/bundles/common-http.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/router': `${ singleFolderNames.vendor }/@angular/router/bundles/router.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/compiler': `${ singleFolderNames.vendor }/@angular/compiler/bundles/compiler.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/forms': `${ singleFolderNames.vendor }/@angular/forms/bundles/forms.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/platform-browser': `${ singleFolderNames.vendor }/@angular/platform-browser/bundles/platform-browser.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@angular/platform-browser-dynamic': `${ singleFolderNames.vendor }/@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@ngx-translate/core': `${ singleFolderNames.vendor }/@ngx-translate/core/bundles/ngx-translate-core.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      '@ngx-translate/http-loader': `${ singleFolderNames.vendor }/@ngx-translate/http-loader/bundles/ngx-translate-http-loader.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      'rxjs': `${ singleFolderNames.vendor }/rxjs/bundles/rxjs.umd${ utils.inProduction() ? '.min' : '' }.js`,
+      'rxjs/operators': `${ singleFolderNames.bundles }/${ utils.inProduction() ? fileNames.minRxjsOperatorsJsFile : fileNames.rxjsOperatorsJsFile }`
+    }
+  };
+
+  aScriptTagForImportmaps.splice(1, 0, JSON.stringify(oImportmaps))
+
+  return aScriptTagForImportmaps.join('');
+}
+
+function copyVendors() {
+  return gulp
+    .src(lodash.map(filePaths.ngDepsToCopy, path => `${ path }/**/*`), {
+      base: folders.nodeModulesPrefix,
+      cwd: folders.nodeModulesPrefix
+    })
+    .pipe(gulp.dest(folders.tmpVendor));
 }
 
 function copyPackageJson() {
@@ -187,14 +224,19 @@ function copyPackageJson() {
 
 function copyPrerequisites() {
   return gulp
-    .src(filePaths.prerequisiteJSFiles, {
+    .src([
+      ...filePaths.prerequisiteCSSFiles,
+      ...filePaths.prerequisiteFontFiles,
+      ...filePaths.prerequisiteJSFiles,
+      ...filePaths.prerequisiteSourcemapFiles
+    ], {
       base: folders.nodeModulesPrefix,
       cwd: folders.nodeModulesPrefix
     })
     .pipe(gulp.dest(folders.tmpPrereq));
 }
 
-function distServerFiles() {
+function doDistServerFiles() {
   return gulp
     .src('*', {
       base: folders.projectRoot,
@@ -203,7 +245,7 @@ function distServerFiles() {
     .pipe(gulp.dest(folders.dist));
 }
 
-function distUiFiles() {
+function doDistUiFiles() {
   return gulp
     .src([
       '*',
@@ -216,108 +258,63 @@ function distUiFiles() {
 }
 
 function doBundleApp() {
+  const outputOptions = {
+    format: 'systemjs',
+    sourcemap: true
+  };
+
   return rollup({
     input: `${ folders.tmpTranspiled }/main.js`,
     plugins: [
       rollupSourcemaps(),
       rollupNodeResolve(),
-      rollupCommonJS()
+      rollupCommonJs()
     ],
-    manualChunks: function (id) {
-      if (lodash.includes(id, 'node_modules')) {
-        return 'deps';
-      }
-    },
+    external: id => lodash.includes(id, 'node_modules') || !/^\.?\.?\//.test(id),
     treeshake: false
   })
-    // .then(bundle => bundle.write({
-    //   file: `${ folders.tmpJs }/main.js`,
-    //   format: 'umd',
-    //   name: 'main',
-    //   globals: {
-    //     '@angular/core': 'ng.core',
-    //     '@angular/common': 'ng.common',
-    //     '@angular/router': 'ng.router',
-    //     '@angular/compiler': 'ng.compiler',
-    //     '@angular/forms': 'ng.forms',
-    //     '@angular/platform-browser': 'ng.platformBrowser',
-    //     '@angular/platform-browser-dynamic': 'ng.platformBrowserDynamic',
-    //     '@angular/common-http': 'ng.common.http'
-    //   },
-    //   sourcemap: true
-    // }))
-    .then(bundle => {
-      return Promise.all([
-        bundle.write({
-          chunkFileNames: '[name].js',
-          dir: `${ folders.tmpJs }`,
-          entryFileNames: '[name].js',
-          format: 'systemjs',
-          globals: {
-            '@angular/core': 'ng.core',
-            '@angular/common': 'ng.common',
-            '@angular/router': 'ng.router',
-            '@angular/compiler': 'ng.compiler',
-            '@angular/forms': 'ng.forms',
-            '@angular/platform-browser': 'ng.platformBrowser',
-            '@angular/platform-browser-dynamic': 'ng.platformBrowserDynamic',
-            '@angular/common-http': 'ng.common.http'
-          },
-          sourcemap: true
-        }),
-        bundle.write({
-          chunkFileNames: '[name].min.js',
-          compact: true,
-          dir: `${ folders.tmpJs }`,
-          entryFileNames: '[name].min.js',
-          format: 'systemjs',
-          globals: {
-            '@angular/core': 'ng.core',
-            '@angular/common': 'ng.common',
-            '@angular/router': 'ng.router',
-            '@angular/compiler': 'ng.compiler',
-            '@angular/forms': 'ng.forms',
-            '@angular/platform-browser': 'ng.platformBrowser',
-            '@angular/platform-browser-dynamic': 'ng.platformBrowserDynamic',
-            '@angular/common-http': 'ng.common.http'
-          },
-          sourcemap: true,
-          plugins: [
-            rollupTerser.terser()
-          ]
-        })
-      ]);
-    })
+    .then(bundle => Promise.all([
+      bundle.write(lodash.assign({}, outputOptions, {
+        file: `${ folders.tmpBundles }/${ fileNames.coreJSFile }`
+      })),
+      bundle.write(lodash.assign({}, outputOptions, {
+        compact: true,
+        file: `${ folders.tmpBundles }/${ fileNames.minCoreJSFile }`,
+        plugins: [
+          rollupTerser.terser()
+        ]
+      }))
+    ]))
     .catch(utils.onError);
 }
 
-function doBundleGlobalRxjs() {
+function doBundleRxjsOperators() {
+  const outputOptions = {
+    format: 'umd',
+    name: 'rxjs-operators',
+    sourcemap: true
+  };
+
   return rollup({
-    input: `${ folders.nodeModulesPrefix }/rxjs/Rx.js`,
+    input: `${ folders.nodeModulesPrefix }/rxjs/operators/index.js`,
     plugins: [
       rollupSourcemaps(),
       rollupNodeResolve(),
-      rollupCommonJS()
+      rollupCommonJs()
     ],
-    treeshake: true
+    treeshake: false
   })
     .then(builder => {
       return Promise.all([
-        builder.write({
-          file: `${ folders.tmp }/${ fileNames.globalRxJsFile }`,
-          format: 'umd',
-          name: 'rxjs',
-          sourcemap: true
-        }),
-        builder.write({
-          file: `${ folders.tmp }/${ fileNames.minGlobalRxJsFile }`,
-          format: 'umd',
-          name: 'rxjs',
-          sourcemap: true,
+        builder.write(lodash.assign({}, outputOptions, {
+          file: `${ folders.tmpBundles }/${ fileNames.rxjsOperatorsJsFile }`
+        })),
+        builder.write(lodash.assign({}, outputOptions, {
+          file: `${ folders.tmpBundles }/${ fileNames.minRxjsOperatorsJsFile }`,
           plugins: [
             rollupTerser.terser()
           ]
-        })
+        }))
       ]);
     })
     .catch(utils.onError);
@@ -336,7 +333,7 @@ function doNpmInstall() {
 
 function doTranspileClient() {
   const srcFileStream = gulp
-    .src(filePaths.ng2CoreSrcTSFiles, {
+    .src(filePaths.ngCoreSrcTSFiles, {
       base: folders.srcClient,
       cwd: folders.srcClient
     });
@@ -368,7 +365,7 @@ function doTranspileClient() {
  */
 function doTsLintClient() {
   return gulp
-    .src(filePaths.ng2CoreSrcTSFiles, {
+    .src(filePaths.ngCoreSrcTSFiles, {
       cwd: folders.client
     })
     .pipe(gPlugins.tslint({
@@ -381,11 +378,10 @@ function doTsLintClient() {
 }
 
 function doStaticResourceInjection() {
-  // const globalRxjsFileStream = utils.createFilesStream(
-  //   !utils.inDevelopment() ? fileNames.minGlobalRxJsFile : fileNames.globalRxJsFile,
-  //   folders.tmp
-  // );
-
+  const prerequisiteCssFileStream = utils.createFilesStream(
+    filePaths.prerequisiteCSSFiles,
+    folders.tmpPrereq
+  );
   const prerequisiteJsFileStream = utils.createFilesStream(
     filePaths.prerequisiteJSFiles,
     folders.tmpPrereq
@@ -398,27 +394,24 @@ function doStaticResourceInjection() {
     })
     .pipe(gulp.dest(folders.tmp))
     .pipe(gPlugins.injectString.replace(
-      '<!-- entry-point:js -->',
-      `
-        <script type="text/javascript">System.import('${singleFolderNames.js}/main.js')</script>
-      `
-      )
-    )
+      '<!-- importmaps:json -->',
+      constructImportmaps()
+    ))
+    .pipe(gPlugins.inject(prerequisiteCssFileStream, {
+      name: 'prerequisite',
+      relative: true
+    }))
     .pipe(gPlugins.inject(prerequisiteJsFileStream, {
       name: 'prerequisite',
       relative: true
     }))
+    .pipe(gPlugins.injectString.replace(
+      '<!-- entry-point:js -->',
+      `<script type="text/javascript">System.import('${ moduleNames.core }')</script>`
+    ))
     .pipe(gulp.dest(folders.tmp));
 }
 
 function removeSourceFiles() {
-  return Promise.all([
-    del(folders.tmpTranspiled),
-    del(
-      lodash.map(filePaths.ng2DepsToCopy, glob => `${ glob }/**/*.@(j|t)s?(.map)`),
-      {
-        cwd: folders.tmp
-      }
-    )
-  ])
+  return del(folders.tmpTranspiled);
 }
