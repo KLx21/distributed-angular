@@ -3,12 +3,12 @@
   "compilerOptions": {
     "rootDir": "..",
     "baseUrl": ".",
-    "outDir": "../tmp/src",
-    "target": "es5",
-    "module": "commonjs",
+    "outDir": "../tmp",
+    "target": "ES5",
+    "module": "ES2015",
     "noImplicitAny": false,
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
@@ -38,21 +38,6 @@
     ]
   },
   "include": [
-    "client/src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts",
-    "src/bootstrapper.ts",
-    "../common/models/app-config.ts",
-    "output/**",
-    "node_modules/**",
-    "e2e/**",
-    "vendor/**",
-    "tmp/**",
-    "dist/**",
-    "server/**",
-    "**/.baseDir.ts",
-    "**/.baseDir.ts",
-    "**/*-aot.ts"
+    "client/src/bootstrap.ts"
   ]
 }

@@ -7,6 +7,7 @@ const path = require('path');
     const sProjectRoot = path.resolve(__dirname);
     const sTmpFolder = '/tmp';
     const sDistFolder = '/dist';
+    const sCommonFolder = '/common';
     const sNgFolder = '/ng';
     const sClientFolder = '/client';
     const sServerFolder = '/server';
@@ -31,7 +32,11 @@ const path = require('path');
 
     module.exports = {
       moduleNames: {
-        'core': 'da-core'
+        bootstrapper: 'da-bootstrapper',
+        common: 'da-common',
+        core: 'da-core',
+        models: 'da-models',
+        rxjsOperators: 'rxjs-operators'
       },
       singleFolderNames: {
         bundles: sBundlesFolder,
@@ -47,10 +52,12 @@ const path = require('path');
         projectRoot: sProjectRoot,
         server: sProjectRoot + sServerFolder,
         client: sProjectRoot + sClientFolder,
+        common: sProjectRoot + sCommonFolder,
         tmp: sProjectRoot + sTmpFolder,
+        tmpCommon: sProjectRoot + sTmpFolder + sCommonFolder,
         tmpNg: sProjectRoot + sTmpFolder + sNgFolder,
         tmpExtraDeps: sProjectRoot + sTmpFolder + sExtraDepsFolder,
-        tmpTranspiled: sProjectRoot + sTmpFolder + sSrcFolder,
+        tmpSrc: sProjectRoot + sTmpFolder + sSrcFolder,
         tmpLocales: sProjectRoot + sTmpFolder + sLocales,
         tmpAssets: sProjectRoot + sTmpFolder + sAssetFolder,
         tmpCSS: sProjectRoot + sTmpFolder + sAssetFolder + sCSSFolder,
@@ -80,7 +87,6 @@ const path = require('path');
         testingDepsJSFile: 'testing-deps.bundle.js',
         globalRxJsFile: 'global-rxjs.bundle.js',
         rxjsOperatorsJsFile: 'rxjs-operators.bundle.js',
-        coreJSFile: 'da-core.bundle.js',
         tenantJSFile: 'tenant-*.umd.js',
         minCSSFile: sNgStylesFileBaseName + '.min.css',
         minExtraDepsJSFile: 'extra-deps.min.js',
@@ -89,12 +95,14 @@ const path = require('path');
         minTestingDepsJSFile: 'testing-deps.bundle.min.js',
         minGlobalRxJsFile: 'global-rxjs.bundle.min.js',
         minRxjsOperatorsJsFile: 'rxjs-operators.bundle.min.js',
-        minCoreJSFile: 'core.bundle.umd.min.js',
         minTenantJSFile: 'tenant-*.umd.min.js',
         minPrerequisiteJSFile: 'prereq.min.js',
         minPrerequisiteCSSFile: 'prereq.min.css',
         apiLicenseFile: 'license.txt',
-        moduleConfig: 'moduleConfig'
+        moduleConfig: 'moduleConfig',
+        findAllBundleFiles: baseName => `${ baseName }.bundle?(.min).js?(.map)`,
+        nameBundleFile: baseName => `${ baseName }.bundle.js`,
+        nameMinBundleFile: baseName => `${ baseName }.bundle.min.js`
       },
       /**
        * 'filepaths' contains all the glob strings used in all the Gulp tasks. The order should NOT be changed
@@ -145,6 +153,7 @@ const path = require('path');
         srcLangFiles: 'app/**/*.lang.json',
         ngCoreSrcTSFiles: [
           '**/*.ts',
+          '!bootstrapper.ts',
           '!environments/*',
           '!**/*.spec.ts'
         ],
@@ -163,6 +172,21 @@ const path = require('path');
           'bootstrap',
           'rxjs',
           'systemjs-plugin-css'
+        ],
+        bootstrapper: 'bootstrapper.ts',
+        allSrc: [
+          '*.ts',
+          '**/*.ts',
+          '!*.spec.ts',
+          '!**/*.spec.ts'
+        ],
+        allSpecs: [
+          '*.spec.ts',
+          '**/*.spec.ts'
+        ],
+        everything: [
+          '*',
+          '**/*'
         ]
       }
     };

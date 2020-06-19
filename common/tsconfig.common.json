@@ -2,24 +2,19 @@
   "compileOnSave": false,
   "compilerOptions": {
     "rootDir": "..",
-    "baseUrl": ".",
+    "baseUrl": "../client",
     "outDir": "../tmp/src",
-    "target": "es5",
-    "module": "commonjs",
+    "target": "ES5",
+    "module": "ES2015",
     "noImplicitAny": false,
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": false,
     "declaration": false,
     "removeComments": false,
-    "paths": {
-      "@da/common": [
-        "../common"
-      ]
-    },
     "typeRoots": [
       "node_modules/@types",
       "node_modules"
@@ -38,21 +33,6 @@
     ]
   },
   "include": [
-    "client/src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts",
-    "src/bootstrapper.ts",
-    "../common/models/app-config.ts",
-    "output/**",
-    "node_modules/**",
-    "e2e/**",
-    "vendor/**",
-    "tmp/**",
-    "dist/**",
-    "server/**",
-    "**/.baseDir.ts",
-    "**/.baseDir.ts",
-    "**/*-aot.ts"
+    "client/src/models.ts"
   ]
 }

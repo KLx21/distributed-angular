@@ -2,7 +2,8 @@ import { NgModule } from '@angular/core';
 import { Route, RouterModule } from '@angular/router';
 import { LoDashStatic } from 'lodash';
 
-declare const lodash: LoDashStatic;
+declare var _: LoDashStatic;
+declare var window: any;
 
 @NgModule({
   imports: [
@@ -31,8 +32,8 @@ export class NgAppRoutingModule {
       }
     ];
 
-    if ((<any>window).ng2Routes && (<any>window).ng2Routes.length > 0) {
-      routes = routes.concat(lodash.map((<any>window).ng2Routes, NgAppRoutingModule.guardRoute));
+    if (window.additionalRoutes && window.additionalRoutes.length > 0) {
+      routes = _.uniqBy(routes.concat(_.map(window.additionalRoutes, NgAppRoutingModule.guardRoute)), 'path');
     }
 
     return routes;
