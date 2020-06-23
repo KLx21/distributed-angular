@@ -19,8 +19,8 @@ declare var window: any;
   getReady()
     .then(() => System.import('da-core'))
     .catch(error => {
-      console.error('Error bootstrapping the UI');
-      console.error(error);
+      console.warn('Error bootstrapping the UI');
+      console.warn(error);
     });
 
   function addAdditionalRoutes(routes: Route[]): void {
@@ -56,8 +56,8 @@ declare var window: any;
     return $
       .get(url)
       .catch(error => {
-        console.error('Error getting distributed apps configuration from the url ', url);
-        console.error(error);
+        console.warn('Error getting distributed apps configuration from the url ', url);
+        console.warn(error);
         return null;
       });
   }

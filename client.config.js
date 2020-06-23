@@ -119,7 +119,8 @@ const path = require('path');
           'zone.js/dist/zone.min.js',
           'systemjs/dist/system.min.js',
           'systemjs/dist/extras/amd.min.js',
-          'systemjs/dist/extras/named-exports.min.js'
+          'systemjs/dist/extras/named-exports.min.js',
+          'systemjs-plugin-css/css.js'
         ],
         prerequisiteSourcemapFiles: [
           'bootstrap/dist/js/bootstrap.min.js.map',
@@ -167,11 +168,18 @@ const path = require('path');
         ],
         ngBundledFiles: '*.bundle?(.min).js?(.map)',
         ngDepsToCopy: [
-          '@angular',
-          '@ngx-translate',
+          '@angular/common',
+          '@angular/compile',
+          '@angular/core',
+          '@angular/forms',
+          '@angular/platform-browser',
+          '@angular/platform-browser-dynamic',
+          '@angular/router',
+          '@ngx-translate/core',
+          '@ngx-translate/http-loader',
           'bootstrap',
           'rxjs',
-          'systemjs-plugin-css'
+          'tslib'
         ],
         bootstrapper: 'bootstrapper.ts',
         allSrc: [

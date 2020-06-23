@@ -1,7 +1,7 @@
-import { AfterContentInit, AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterContentInit, Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'tci-root',
+  selector: 'app-root',
   templateUrl: './ng-app.component.html',
   styleUrls: [
     './ng-app.component.less'

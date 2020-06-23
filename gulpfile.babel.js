@@ -33,8 +33,8 @@ const cleanUpAll = gulp.parallel(
   cleanServer
 );
 
-const transpileBootstrapFile = gulp.series(
-  cleanTmpBootstrapFile,
+const transpileBootstrapper = gulp.series(
+  cleanTmpBootstrapper,
   doTranspileBootstrapper
 );
 
@@ -78,7 +78,7 @@ const copyDependencies = gulp.series(
 const prepareNgFiles = gulp.series(
   bundleApp,
   bundleRxjsOperators,
-  transpileBootstrapFile,
+  transpileBootstrapper,
   copyDependencies,
   copyPrerequisites
 );
@@ -124,7 +124,7 @@ lodash.assign(exports, {
   prepareNgFiles,
   transpileClient,
   transpileCommon,
-  transpileBootstrapFile
+  transpileBootstrapper
 });
 
 /************** Function declarations start from here on **************/
@@ -133,7 +133,7 @@ function cleanServer() {
   return del(folders.distServer);
 }
 
-function cleanTmpBootstrapFile() {
+function cleanTmpBootstrapper() {
   return del(`${ fileNames.findAllBundleFiles(moduleNames.bootstrapper) }`, {
     cwd: folders.tmp
   });
