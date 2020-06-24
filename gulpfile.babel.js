@@ -57,11 +57,11 @@ const bundleCommon = gulp.series(
   removeCommonSrcFiles
 );
 
-const bundleApp = gulp.series(
+const bundleCore = gulp.series(
   cleanTmpCoreBundle,
   transpileClient,
   bundleCommon,
-  doBundleApp,
+  doBundleCore,
   removeCoreClientFiles
 );
 
@@ -76,7 +76,7 @@ const copyDependencies = gulp.series(
 );
 
 const prepareNgFiles = gulp.series(
-  bundleApp,
+  bundleCore,
   bundleRxjsOperators,
   transpileBootstrapper,
   copyDependencies,
@@ -108,7 +108,7 @@ const distServer = gulp.series(
 
 /* Exported tasks */
 lodash.assign(exports, {
-  bundleApp,
+  bundleCore,
   bundleCommon,
   bundleRxjsOperators,
   cleanUpAll,
@@ -224,15 +224,6 @@ function constructImportmaps() {
   return aScriptTagForImportmaps.join('');
 }
 
-function copyVendors() {
-  return gulp
-    .src(lodash.map(filePaths.ngDepsToCopy, path => `${ path }/**/*`), {
-      base: folders.nodeModulesPrefix,
-      cwd: folders.nodeModulesPrefix
-    })
-    .pipe(gulp.dest(folders.tmpVendor));
-}
-
 function copyPackageJson() {
   return gulp
     .src(fileNames.packageJson, {
@@ -256,9 +247,19 @@ function copyPrerequisites() {
     .pipe(gulp.dest(folders.tmpPrereq));
 }
 
-function doBundleApp() {
+function copyVendors() {
+  return gulp
+    .src(lodash.map(filePaths.ngDepsToCopy, path => `${ path }/**/*`), {
+      base: folders.nodeModulesPrefix,
+      cwd: folders.nodeModulesPrefix
+    })
+    .pipe(gulp.dest(folders.tmpVendor));
+}
+
+function doBundleCore() {
   const outputOptions = {
-    format: 'systemjs',
+    format: 'umd',
+    name: moduleNames.core,
     sourcemap: true
   };
 

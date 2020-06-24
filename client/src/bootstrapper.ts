@@ -9,6 +9,7 @@ declare var System: any;
 declare var window: any;
 
 (function () {
+  /* Sample data. Should be from an API call. */
   const tenants = [
     {
       name: 'tenant1',
