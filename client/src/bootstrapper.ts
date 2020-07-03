@@ -12,7 +12,7 @@ declare var window: any;
   /* Sample data. Should be from an API call. */
   const tenants = [
     {
-      name: 'tenant1',
+      name: 'tenant-1',
       configUrl: 'http://localhost:3334/da-config.json'
     }
   ];

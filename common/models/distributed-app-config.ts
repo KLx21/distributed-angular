@@ -10,6 +10,7 @@ export interface Importmaps {
     }
   };
 }
+
 export interface DaConfig {
   importmaps?: Importmaps;
   routes?: Route[];
