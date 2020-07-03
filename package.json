@@ -60,7 +60,7 @@
         "@types/semver": "^7.2.0",
         "@types/systemjs": "^6.1.0",
         "@types/ws": "^7.2.0",
-        "codelyzer": "^5.2.2",
+        "codelyzer": "^6.0.0",
         "del": "^5.1.0",
         "gulp": "^4.0.2",
         "gulp-clean-css": "^4.3.0",
