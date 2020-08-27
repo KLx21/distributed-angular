@@ -1,4 +1,5 @@
 import { AfterContentInit, Component, OnInit } from '@angular/core';
+import { NgAppsService } from './shared/ng-services/ng-apps.service';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +12,9 @@ export class NgAppComponent implements OnInit, AfterContentInit {
 
   renderTime: string;
 
-  constructor() {}
+  constructor(
+    private appsService: NgAppsService
+  ) {}
 
   ngOnInit() {}
 

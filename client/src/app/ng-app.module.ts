@@ -8,6 +8,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { NgAppRoutingModule } from './ng-app-routing.module';
 import { NgAppComponent } from './ng-app.component';
+import { NgSharedModule } from './shared/ng-shared.module';
 
 /* This is for AoT readiness. */
 export function translateLoaderFactory(httpClient: HttpClient) {
@@ -17,6 +18,7 @@ export function translateLoaderFactory(httpClient: HttpClient) {
 @NgModule({
   imports: [
     NgAppRoutingModule,
+    NgSharedModule,
     BrowserModule,
     FormsModule,
     HttpClientModule,
